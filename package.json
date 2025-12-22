@@ -1,0 +1,50 @@
+{
+  "name": "@qrcode-js/core",
+  "version": "1.0.0",
+  "description": "Zero-dependency QR Code generator with native ISO/IEC 18004 implementation",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "qrcode",
+    "qr",
+    "qr-code",
+    "generator",
+    "zero-dependency",
+    "typescript",
+    "svg",
+    "canvas",
+    "iso18004",
+    "reed-solomon"
+  ],
+  "author": "",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.0"
+  }
+}

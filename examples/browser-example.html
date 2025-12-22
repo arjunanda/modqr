@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Code Generator - Browser Example</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .container {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        padding: 40px;
+        max-width: 900px;
+        width: 100%;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 10px;
+        font-size: 32px;
+      }
+
+      .subtitle {
+        color: #666;
+        margin-bottom: 30px;
+        font-size: 14px;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .control-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      label {
+        font-size: 14px;
+        font-weight: 600;
+        color: #555;
+      }
+
+      input[type="text"],
+      input[type="number"],
+      select {
+        padding: 10px 14px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s;
+      }
+
+      input[type="text"]:focus,
+      input[type="number"]:focus,
+      select:focus {
+        outline: none;
+        border-color: #667eea;
+      }
+
+      input[type="color"] {
+        width: 100%;
+        height: 44px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        cursor: pointer;
+      }
+
+      button {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+
+      button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      button:active {
+        transform: translateY(0);
+      }
+
+      .output {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+      }
+
+      .output-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .output-item h3 {
+        color: #333;
+        font-size: 18px;
+      }
+
+      .qr-container {
+        background: #f5f5f5;
+        padding: 20px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 300px;
+      }
+
+      canvas {
+        border-radius: 8px;
+      }
+
+      .info {
+        background: #f0f4ff;
+        border-left: 4px solid #667eea;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 20px;
+        font-size: 14px;
+        color: #555;
+      }
+
+      .info strong {
+        color: #667eea;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 QR Code Generator</h1>
+      <p class="subtitle">Zero-dependency QR code generation in the browser</p>
+
+      <div class="controls">
+        <div class="control-group">
+          <label for="data">Data to Encode</label>
+          <input
+            type="text"
+            id="data"
+            value="https://example.com"
+            placeholder="Enter text or URL"
+          />
+        </div>
+
+        <div class="control-group">
+          <label for="style">Style</label>
+          <select id="style">
+            <option value="square">Square</option>
+            <option value="dots">Dots</option>
+            <option value="rounded">Rounded</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="errorCorrection">Error Correction</label>
+          <select id="errorCorrection">
+            <option value="L">Low (7%)</option>
+            <option value="M" selected>Medium (15%)</option>
+            <option value="Q">Quartile (25%)</option>
+            <option value="H">High (30%)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label for="size">Size (px)</label>
+          <input
+            type="number"
+            id="size"
+            value="300"
+            min="100"
+            max="1000"
+            step="50"
+          />
+        </div>
+
+        <div class="control-group">
+          <label for="foreground">Foreground Color</label>
+          <input type="color" id="foreground" value="#000000" />
+        </div>
+
+        <div class="control-group">
+          <label for="background">Background Color</label>
+          <input type="color" id="background" value="#ffffff" />
+        </div>
+      </div>
+
+      <button onclick="generateQRCodes()">Generate QR Codes</button>
+
+      <div class="output">
+        <div class="output-item">
+          <h3>SVG Renderer</h3>
+          <div class="qr-container" id="svg-output"></div>
+        </div>
+
+        <div class="output-item">
+          <h3>Canvas Renderer</h3>
+          <div class="qr-container">
+            <canvas id="canvas-output"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="info" id="info"></div>
+    </div>
+
+    <script type="module">
+      import {
+        generateSVG,
+        generateCanvas,
+        generateQR,
+      } from "../dist/index.js";
+
+      window.generateQRCodes = function () {
+        const data = document.getElementById("data").value;
+        const style = document.getElementById("style").value;
+        const errorCorrection =
+          document.getElementById("errorCorrection").value;
+        const size = parseInt(document.getElementById("size").value);
+        const foreground = document.getElementById("foreground").value;
+        const background = document.getElementById("background").value;
+
+        const options = {
+          size,
+          style,
+          errorCorrection,
+          foreground,
+          background,
+          margin: 4,
+        };
+
+        try {
+          // Generate SVG
+          const svg = generateSVG(data, options);
+          document.getElementById("svg-output").innerHTML = svg;
+
+          // Generate Canvas
+          const canvas = document.getElementById("canvas-output");
+          generateCanvas(data, canvas, options);
+
+          // Get info
+          const result = generateQR(data, options);
+          document.getElementById("info").innerHTML = `
+          <strong>QR Code Info:</strong><br>
+          Version: ${result.version} (${result.matrix.length}×${result.matrix.length} modules)<br>
+          Error Correction: ${result.errorCorrectionLevel}<br>
+          Data Length: ${data.length} characters
+        `;
+        } catch (error) {
+          alert("Error generating QR code: " + error.message);
+        }
+      };
+
+      // Generate on page load
+      window.generateQRCodes();
+    </script>
+  </body>
+</html>
