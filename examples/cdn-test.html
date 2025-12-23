@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ModQR CDN Test</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          Helvetica, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        background-color: #f3f4f6;
+        margin: 0;
+      }
+      .container {
+        background: white;
+        padding: 2rem;
+        border-radius: 1rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        text-align: center;
+        max-width: 500px;
+        width: 90%;
+      }
+      h1 {
+        margin-bottom: 1.5rem;
+        color: #1f2937;
+      }
+      #qr-container {
+        margin: 2rem 0;
+        display: flex;
+        justify-content: center;
+      }
+      .status {
+        margin-top: 1rem;
+        padding: 0.5rem;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+      }
+      .success {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+      .loading {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+      .error {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📦 CDN Import Test</h1>
+      <p>Loading <code>modqr</code> from unpkg.com...</p>
+
+      <div id="qr-container"></div>
+
+      <div id="status" class="status loading">Initializing...</div>
+    </div>
+
+    <!-- Import from CDN -->
+    <!-- Note: It might take a few minutes for the new version to propagate to CDNs -->
+    <script src="https://unpkg.com/modqr@1.0.3/dist/modqr.min.js"></script>
+
+    <script>
+      const statusEl = document.getElementById("status");
+      const container = document.getElementById("qr-container");
+
+      window.onload = () => {
+        try {
+          if (typeof modqr === "undefined") {
+            throw new Error(
+              "ModQR global variable not found. CDN might still be propagating."
+            );
+          }
+
+          // Generate QR Code using the global object
+          const result = modqr.generateSVG("https://modqr.netlify.app", {
+            style: "liquid",
+            finderStyle: "rounded",
+            foreground: "#4f46e5",
+            size: 300,
+            margin: 2,
+          });
+
+          container.innerHTML = result;
+          statusEl.textContent =
+            "✅ Successfully loaded from CDN and generated QR code!";
+          statusEl.className = "status success";
+
+          console.log("ModQR Version:", modqr);
+        } catch (err) {
+          console.error(err);
+          statusEl.textContent = "❌ Error: " + err.message;
+          statusEl.className = "status error";
+
+          // Fallback suggestion
+          const p = document.createElement("p");
+          p.style.fontSize = "0.8em";
+          p.style.marginTop = "10px";
+          p.innerHTML =
+            "If the CDN fails (404), try opening this file again in 5 minutes.<br>NPM propagation takes time.";
+          statusEl.appendChild(p);
+        }
+      };
+    </script>
+  </body>
+</html>
