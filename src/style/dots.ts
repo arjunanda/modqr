@@ -38,3 +38,41 @@ function isInFinderPattern(row: number, col: number, size: number): boolean {
 export function getDotRadius(): number {
   return 0.45; // 45% of module size for visual appeal
 }
+import type { QRMatrix } from '../core/matrix.js';
+import type { QRStyleRenderer, StyleOptions } from '../render/renderer.js';
+
+export class DotsStyle implements QRStyleRenderer {
+  drawModule(
+    x: number,
+    y: number,
+    _row: number,
+    _col: number,
+    size: number,
+    _matrix: QRMatrix,
+    options: StyleOptions
+  ): string {
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const radius = size * 0.45;
+    return `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${options.foreground}"/>`;
+  }
+
+  drawCanvas(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    _row: number,
+    _col: number,
+    size: number,
+    _matrix: QRMatrix,
+    options: StyleOptions
+  ): void {
+    const cx = x + size / 2;
+    const cy = y + size / 2;
+    const radius = size * 0.45;
+    ctx.fillStyle = options.foreground;
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
+    ctx.fill();
+  }
+}

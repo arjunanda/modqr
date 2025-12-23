@@ -33,9 +33,9 @@ console.log('✅ Generated: qrcode-with-logo-20.svg\n');
 // Example 2: QR code with larger logo (25% size) - Dots style
 console.log('Example 2: QR code with larger logo (25% size) - Dots style');
 
-const qrWithLogo25 = generateSVG('https://github.com', {
+const qrWithLogo25 = generateSVG('file:///home/rbz/development/packages/qrcode-js/qrcode-with-logo-20.svg', {
   size: 500,
-  errorCorrection: 'H',
+  errorCorrection: 'M',
   style: 'dots',
   foreground: '#000000',
   background: '#ffffff',
@@ -53,9 +53,8 @@ console.log('✅ Generated: qrcode-with-logo-25.svg\n');
 // Example 3: QR code with small logo (15% size) - Square style
 console.log('Example 3: QR code with small logo (15% size) - Square style');
 
-const qrWithLogo15 = generateSVG('https://example.com/products', {
-  size: 500,
-  errorCorrection: 'H',
+const qrWithLogo15 = generateSVG('https://accounts.google.com/signin/oauth/consent?authuser=2&part=AJi8hAPkel2DLtd7mYY8lTRQFMbOBhpX7xZm1pJXAtt4b9KLa_jxF8g0hewtpCmEfQ3VMYziY_942MnbKR2nverxO2ES1pMgkqjfw4idJuwS3QPjIyKgQWRMeRBUR2jQdOpzK2vTHLkS0CJWbw6qU6nmcv2zbgh7wC-NVy0KmDSoHS_lFtEvRvYcM_3a0vwneV8HwcE0O9e51osLsB0TlopOC02XLVoScJeDSKJmXdZ_e1aFZFJ1fz9DsX0IRBr-m3l3wIvnKevCwkb_8WeTiBzH6ZSg5csByUSAj7264wTbbGclGyCjkSK5bEji0IakH4q4nw_QjQcFA2-hGs1giGeZbNfBuh8LGDbD7VI5i9BLyJF_YLpctcurOFXn7Ru3fM-OGYtsI0GXrILhJkDy3IumqaPwee_HPW581u83knko1okUphI8YFNZv8Pk1WugwShTnoOoJ68UlxZfO2chmw7mH8wwBDouTKWNoMqS_8-5qMmziQcRQJ0&flowName=GeneralOAuthFlow&as=S322553770%3A1766222440518151&client_id=1071006060591-tmhssin2h21lcre235vtolojh4g403ep.apps.googleusercontent.com&requestPath=%2Fsignin%2Foauth%2Fconsent&pli=1&rapt=AEjHL4M3XI7aVtJvdHOGUqLQOSC3GJ9z3vjgYIbfCpDSO1aNa8Phm5b_19ftntWQwffg5rWUwopkksnxg8bGqyi8CsX3l3jtyvYJ_7ARIFDtG_lWFSiIXhs', {
+  size: 700,
   style: 'square',
   foreground: '#2e7d32',
   background: '#ffffff',
@@ -73,9 +72,8 @@ console.log('✅ Generated: qrcode-with-logo-15.svg\n');
 // Example 4: Comparison - without logo
 console.log('Example 4: Comparison - without logo');
 
-const qrNoLogo = generateSVG('https://example.com', {
+const qrNoLogo = generateSVG('https://example.com/home/rbz/development/packages/qrcode-js/qrcode-with-logo-20.svg', {
   size: 500,
-  errorCorrection: 'H',
   style: 'rounded',
   foreground: '#1a73e8',
   background: '#ffffff'

@@ -124,3 +124,54 @@ export function generateRoundedRectPath(
   
   return path;
 }
+import type { QRStyleRenderer, StyleOptions } from '../render/renderer.js';
+
+export class RoundedStyle implements QRStyleRenderer {
+  drawModule(
+    x: number,
+    y: number,
+    row: number,
+    col: number,
+    size: number,
+    matrix: QRMatrix,
+    options: StyleOptions
+  ): string {
+    const radius = size * 0.4;
+    const corners = getCornerRounding(matrix, row, col);
+    const path = generateRoundedRectPath(x, y, size, size, radius, corners);
+    return `<path d="${path}" fill="${options.foreground}"/>`;
+  }
+
+  drawCanvas(
+    ctx: CanvasRenderingContext2D,
+    x: number,
+    y: number,
+    row: number,
+    col: number,
+    size: number,
+    matrix: QRMatrix,
+    options: StyleOptions
+  ): void {
+    const radius = size * 0.4;
+    const corners = getCornerRounding(matrix, row, col);
+    
+    const tl = corners.topLeft ? radius : 0;
+    const tr = corners.topRight ? radius : 0;
+    const bl = corners.bottomLeft ? radius : 0;
+    const br = corners.bottomRight ? radius : 0;
+
+    ctx.fillStyle = options.foreground;
+    ctx.beginPath();
+    ctx.moveTo(x + tl, y);
+    ctx.lineTo(x + size - tr, y);
+    if (tr > 0) ctx.arcTo(x + size, y, x + size, y + tr, tr);
+    ctx.lineTo(x + size, y + size - br);
+    if (br > 0) ctx.arcTo(x + size, y + size, x + size - br, y + size, br);
+    ctx.lineTo(x + bl, y + size);
+    if (bl > 0) ctx.arcTo(x, y + size, x, y + size - bl, bl);
+    ctx.lineTo(x, y + tl);
+    if (tl > 0) ctx.arcTo(x, y, x + tl, y, tl);
+    ctx.closePath();
+    ctx.fill();
+  }
+}

@@ -12,6 +12,7 @@ import { applyMask, selectBestMask, createReservationMap } from './core/mask.js'
 import { renderSVG } from './render/svg.js';
 import { renderCanvas } from './render/canvas.js';
 import { renderASCII } from './render/ascii.js';
+import { QRStyle, FinderStyle, CustomFinderStyles } from './render/types.js';
 
 /**
  * Logo configuration
@@ -32,7 +33,9 @@ export interface QRCodeOptions {
   foreground?: string;
   background?: string;
   errorCorrection?: ErrorCorrectionLevel;
-  style?: 'square' | 'dots' | 'rounded';
+  style?: QRStyle;
+  finderStyle?: FinderStyle;
+  customFinderStyles?: CustomFinderStyles;
   logo?: LogoConfig;
   renderer?: 'svg' | 'canvas' | 'ascii';
 }
@@ -113,7 +116,17 @@ export function generateQR(data: string, options: QRCodeOptions = {}): QRResult 
     errorCorrectionLevel: errorCorrection,
   };
 
-  const renderOptions = { size, margin, foreground, background, style, logo };
+  const renderOptions = { 
+    size, 
+    margin, 
+    foreground, 
+    background, 
+    style, 
+    finderStyle: options.finderStyle,
+    customFinderStyles: options.customFinderStyles,
+    logo 
+  };
+
 
   if (renderer === 'svg') {
     result.svg = renderSVG(finalMatrix, renderOptions);

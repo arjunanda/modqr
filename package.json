@@ -1,5 +1,5 @@
 {
-  "name": "@qrcode-js/core",
+  "name": "modqr",
   "version": "1.0.0",
   "description": "Zero-dependency QR Code generator with native ISO/IEC 18004 implementation",
   "type": "module",
@@ -13,7 +13,6 @@
   },
   "files": [
     "dist",
-    "src",
     "README.md",
     "LICENSE"
   ],
@@ -35,11 +34,11 @@
     "iso18004",
     "reed-solomon"
   ],
-  "author": "",
+  "author": "arjunanda",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": ""
+    "url": "git+https://github.com/arjunanda/modqr-js.git"
   },
   "engines": {
     "node": ">=16.0.0"

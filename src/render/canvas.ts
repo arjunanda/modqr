@@ -4,13 +4,14 @@
  */
 
 import type { QRMatrix } from '../core/matrix.js';
+import { QRStyle } from './types.js';
+import { BaseRenderer, type StyleOptions, type QRStyleRenderer } from './renderer.js';
+import * as Styles from '../style/index.js';
+import { LogoConfig } from './svg.js';
 
-export interface CanvasOptions {
-  size?: number;
-  margin?: number;
-  foreground?: string;
-  background?: string;
-  style?: 'square' | 'dots' | 'rounded';
+export interface CanvasOptions extends StyleOptions {
+  style?: QRStyle;
+  logo?: LogoConfig;
 }
 
 /**
@@ -19,7 +20,7 @@ export interface CanvasOptions {
 export function renderCanvas(
   matrix: QRMatrix,
   canvas: HTMLCanvasElement,
-  options: CanvasOptions = {}
+  options: Partial<CanvasOptions> = {}
 ): void {
   const {
     size = 300,
@@ -27,6 +28,7 @@ export function renderCanvas(
     foreground = '#000000',
     background = '#ffffff',
     style = 'square',
+    logo,
   } = options;
 
   const matrixSize = matrix.length;
@@ -46,115 +48,106 @@ export function renderCanvas(
   ctx.fillStyle = background;
   ctx.fillRect(0, 0, actualSize, actualSize);
 
-  // Set foreground color
-  ctx.fillStyle = foreground;
-
-  // Render based on style
-  if (style === 'dots') {
-    renderDotsCanvas(ctx, matrix, moduleSize, margin);
-  } else if (style === 'rounded') {
-    renderRoundedCanvas(ctx, matrix, moduleSize, margin);
-  } else {
-    renderSquareCanvas(ctx, matrix, moduleSize, margin);
+  // Select style renderer
+  let styleRenderer: QRStyleRenderer;
+  switch (style) {
+    case 'liquid': styleRenderer = new Styles.LiquidStyle(); break;
+    case 'blob': styleRenderer = new Styles.BlobStyle(); break;
+    case 'wave': styleRenderer = new Styles.WaveStyle(); break;
+    case 'pixel': styleRenderer = new Styles.PixelStyle(); break;
+    case 'gradient': styleRenderer = new Styles.GradientStyle(); break;
+    case 'neon': styleRenderer = new Styles.NeonStyle(); break;
+    case 'glass': styleRenderer = new Styles.GlassStyle(); break;
+    case 'dot-matrix': styleRenderer = new Styles.DotMatrixStyle(); break;
+    case 'diamond': styleRenderer = new Styles.DiamondStyle(); break;
+    case 'star': styleRenderer = new Styles.StarStyle(); break;
+    case 'glitch': styleRenderer = new Styles.GlitchStyle(); break;
+    case 'plus-cross': styleRenderer = new Styles.PlusCrossStyle(); break;
+    case 'smooth-connected': styleRenderer = new Styles.SmoothConnectedStyle(); break;
+    case 'dots': 
+      styleRenderer = new Styles.DotsStyle(); 
+      break;
+    case 'rounded':
+      styleRenderer = new Styles.RoundedStyle();
+      break;
+    default:
+      styleRenderer = {
+        drawModule: (x: number, y: number, _r: number, _c: number, s: number, _m: QRMatrix, opts: StyleOptions) => {
+          if (opts.ctx) {
+            opts.ctx.fillStyle = opts.foreground;
+            opts.ctx.fillRect(x, y, s, s);
+          }
+          return '';
+        }
+      } as QRStyleRenderer;
   }
-}
 
-/**
- * Render square modules on canvas
- */
-function renderSquareCanvas(
-  ctx: CanvasRenderingContext2D,
-  matrix: QRMatrix,
-  moduleSize: number,
-  margin: number
-): void {
-  const matrixSize = matrix.length;
-
-  for (let row = 0; row < matrixSize; row++) {
-    for (let col = 0; col < matrixSize; col++) {
-      if (matrix[row][col]) {
-        const x = (col + margin) * moduleSize;
-        const y = (row + margin) * moduleSize;
-        ctx.fillRect(x, y, moduleSize, moduleSize);
-      }
-    }
-  }
-}
-
-/**
- * Render dot modules on canvas
- */
-function renderDotsCanvas(
-  ctx: CanvasRenderingContext2D,
-  matrix: QRMatrix,
-  moduleSize: number,
-  margin: number
-): void {
-  const matrixSize = matrix.length;
-  const radius = moduleSize * 0.45;
-
-  for (let row = 0; row < matrixSize; row++) {
-    for (let col = 0; col < matrixSize; col++) {
-      if (matrix[row][col]) {
-        // Keep finder patterns as squares
-        if (isInFinderPattern(row, col, matrixSize)) {
-          const x = (col + margin) * moduleSize;
-          const y = (row + margin) * moduleSize;
-          ctx.fillRect(x, y, moduleSize, moduleSize);
-        } else {
-          const cx = (col + margin + 0.5) * moduleSize;
-          const cy = (row + margin + 0.5) * moduleSize;
-          ctx.beginPath();
-          ctx.arc(cx, cy, radius, 0, 2 * Math.PI);
-          ctx.fill();
+  // Canvas style renderers need to be wrapped to support Canvas context
+  const canvasStyleWrapper = {
+    setup: (opts: StyleOptions) => (styleRenderer as any).setup?.(opts),
+    drawBackground: (opts: StyleOptions) => (styleRenderer as any).drawBackground?.(opts) || '',
+    drawModule: (x: number, y: number, r: number, c: number, s: number, m: QRMatrix, opts: StyleOptions) => {
+      if ((styleRenderer as any).drawCanvas && opts.ctx) {
+        (styleRenderer as any).drawCanvas(opts.ctx, x, y, r, c, s, m, opts);
+      } else {
+        const svg = styleRenderer.drawModule(x, y, r, c, s, m, opts);
+        if (svg && opts.ctx) {
+          // Simple fallback for styles that only return SVG
+          opts.ctx.fillStyle = opts.foreground;
+          opts.ctx.fillRect(x, y, s, s);
         }
       }
-    }
+      return '';
+    },
+    finalize: () => (styleRenderer as any).finalize?.() || ''
+  };
+
+  const renderer = new BaseRenderer(canvasStyleWrapper);
+  renderer.render(matrix, { ...options, size, margin, foreground, background, ctx });
+
+  // Add logo if specified
+  if (logo && ctx) {
+    renderLogoCanvas(ctx, logo, matrixSize, moduleSize, margin);
   }
 }
 
 /**
- * Render rounded modules on canvas
+ * Render logo overlay on Canvas
  */
-function renderRoundedCanvas(
+function renderLogoCanvas(
   ctx: CanvasRenderingContext2D,
-  matrix: QRMatrix,
+  logo: LogoConfig,
+  matrixSize: number,
   moduleSize: number,
   margin: number
 ): void {
-  const matrixSize = matrix.length;
-  const radius = moduleSize * 0.4;
-
-  for (let row = 0; row < matrixSize; row++) {
-    for (let col = 0; col < matrixSize; col++) {
-      if (matrix[row][col]) {
-        const x = (col + margin) * moduleSize;
-        const y = (row + margin) * moduleSize;
-
-        // Draw rounded rectangle
-        ctx.beginPath();
-        ctx.moveTo(x + radius, y);
-        ctx.lineTo(x + moduleSize - radius, y);
-        ctx.arcTo(x + moduleSize, y, x + moduleSize, y + radius, radius);
-        ctx.lineTo(x + moduleSize, y + moduleSize - radius);
-        ctx.arcTo(x + moduleSize, y + moduleSize, x + moduleSize - radius, y + moduleSize, radius);
-        ctx.lineTo(x + radius, y + moduleSize);
-        ctx.arcTo(x, y + moduleSize, x, y + moduleSize - radius, radius);
-        ctx.lineTo(x, y + radius);
-        ctx.arcTo(x, y, x + radius, y, radius);
-        ctx.closePath();
-        ctx.fill();
-      }
-    }
-  }
-}
-
-/**
- * Check if module is in finder pattern
- */
-function isInFinderPattern(row: number, col: number, size: number): boolean {
-  if (row < 7 && col < 7) return true;
-  if (row < 7 && col >= size - 7) return true;
-  if (row >= size - 7 && col < 7) return true;
-  return false;
+  const logoSize = logo.size || 0.2;
+  const logoMargin = logo.margin || 2;
+  const logoBg = logo.background || '#ffffff';
+  
+  const logoDimension = matrixSize * logoSize;
+  const logoPixelSize = logoDimension * moduleSize;
+  
+  const qrCodeSize = matrixSize * moduleSize;
+  const qrCodeStartX = margin * moduleSize;
+  const qrCodeStartY = margin * moduleSize;
+  const centerX = qrCodeStartX + qrCodeSize / 2;
+  const centerY = qrCodeStartY + qrCodeSize / 2;
+  
+  const bgSize = logoPixelSize + (logoMargin * moduleSize);
+  const bgX = centerX - bgSize / 2;
+  const bgY = centerY - bgSize / 2;
+  
+  // Background
+  ctx.fillStyle = logoBg;
+  ctx.fillRect(bgX, bgY, bgSize, bgSize);
+  
+  // Logo image
+  const img = new Image();
+  img.onload = () => {
+    const logoX = centerX - logoPixelSize / 2;
+    const logoY = centerY - logoPixelSize / 2;
+    ctx.drawImage(img, logoX, logoY, logoPixelSize, logoPixelSize);
+  };
+  img.src = logo.src;
 }
