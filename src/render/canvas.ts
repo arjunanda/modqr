@@ -145,9 +145,22 @@ function renderLogoCanvas(
   // Logo image
   const img = new Image();
   img.onload = () => {
-    const logoX = centerX - logoPixelSize / 2;
-    const logoY = centerY - logoPixelSize / 2;
-    ctx.drawImage(img, logoX, logoY, logoPixelSize, logoPixelSize);
+    // Calculate aspect ratio to fit within the square area
+    const aspect = img.naturalWidth / img.naturalHeight;
+    let drawWidth = logoPixelSize;
+    let drawHeight = logoPixelSize;
+
+    if (aspect >= 1) {
+      // Wider than tall or square
+      drawHeight = logoPixelSize / aspect;
+    } else {
+      // Taller than wide
+      drawWidth = logoPixelSize * aspect;
+    }
+
+    const logoX = centerX - drawWidth / 2;
+    const logoY = centerY - drawHeight / 2;
+    ctx.drawImage(img, logoX, logoY, drawWidth, drawHeight);
   };
   img.src = logo.src;
 }
