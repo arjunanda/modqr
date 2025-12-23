@@ -1,6 +1,6 @@
 {
   "name": "modqr",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Lightweight and highly customizable QR Code generator for JavaScript and TypeScript. Zero-dependency, supports SVG/Canvas/ASCII, custom module styles, finder patterns, and logo integration.",
   "homepage": "https://modqr.netlify.app/",
   "type": "module",
