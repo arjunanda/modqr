@@ -1,11 +1,14 @@
 {
   "name": "modqr",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Lightweight and highly customizable QR Code generator for JavaScript and TypeScript. Zero-dependency, supports SVG/Canvas/ASCII, custom module styles, finder patterns, and logo integration.",
   "homepage": "https://modqr.netlify.app/",
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "unpkg": "./dist/modqr.min.js",
+  "jsdelivr": "./dist/modqr.min.js",
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -18,9 +21,10 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:bundle",
+    "build:bundle": "esbuild src/index.ts --bundle --minify --sourcemap --format=iife --global-name=modqr --outfile=dist/modqr.min.js",
     "clean": "rm -rf dist",
-    "prebuild": "npm run clean",  
+    "prebuild": "npm run clean",
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -51,6 +55,7 @@
     "node": ">=16.0.0"
   },
   "devDependencies": {
+    "esbuild": "^0.27.2",
     "typescript": "^5.3.0"
   }
 }
