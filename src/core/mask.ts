@@ -158,61 +158,83 @@ function penaltyRule3(matrix: QRMatrix): number {
   const N3 = 40;
   let penalty = 0;
   
-  // Pattern: dark, light, dark, dark, dark, light, dark
-  // With 4 light modules before or after
-  const pattern1 = [true, false, true, true, true, false, true];
-  const pattern2 = [true, false, true, true, true, false, true];
+  // Pattern: 1011101 (dark, light, dark, dark, dark, light, dark)
+  const pattern = [true, false, true, true, true, false, true];
   
   // Check rows
   for (let row = 0; row < size; row++) {
-    for (let col = 0; col <= size - 11; col++) {
-      // Check pattern with 4 light before
-      if (
-        !matrix[row][col] &&
-        !matrix[row][col + 1] &&
-        !matrix[row][col + 2] &&
-        !matrix[row][col + 3] &&
-        matchPattern(matrix, row, col + 4, pattern1, true)
-      ) {
-        penalty += N3;
-      }
-      
-      // Check pattern with 4 light after
-      if (
-        matchPattern(matrix, row, col, pattern2, true) &&
-        !matrix[row][col + 7] &&
-        !matrix[row][col + 8] &&
-        !matrix[row][col + 9] &&
-        !matrix[row][col + 10]
-      ) {
-        penalty += N3;
+    for (let col = 0; col <= size - 7; col++) {
+      if (matchPattern(matrix, row, col, pattern, true)) {
+        // Pattern found, check for 4 light modules before or after
+        
+        // 4 light modules before
+        let lightBefore = true;
+        if (col < 4) {
+          lightBefore = false;
+        } else {
+          for (let i = 1; i <= 4; i++) {
+            if (matrix[row][col - i]) {
+              lightBefore = false;
+              break;
+            }
+          }
+        }
+        
+        // 4 light modules after
+        let lightAfter = true;
+        if (col + 7 + 4 > size) {
+          lightAfter = false;
+        } else {
+          for (let i = 0; i < 4; i++) {
+            if (matrix[row][col + 7 + i]) {
+              lightAfter = false;
+              break;
+            }
+          }
+        }
+        
+        if (lightBefore || lightAfter) {
+          penalty += N3;
+        }
       }
     }
   }
   
   // Check columns
   for (let col = 0; col < size; col++) {
-    for (let row = 0; row <= size - 11; row++) {
-      // Check pattern with 4 light before
-      if (
-        !matrix[row][col] &&
-        !matrix[row + 1][col] &&
-        !matrix[row + 2][col] &&
-        !matrix[row + 3][col] &&
-        matchPattern(matrix, row + 4, col, pattern1, false)
-      ) {
-        penalty += N3;
-      }
-      
-      // Check pattern with 4 light after
-      if (
-        matchPattern(matrix, row, col, pattern2, false) &&
-        !matrix[row + 7][col] &&
-        !matrix[row + 8][col] &&
-        !matrix[row + 9][col] &&
-        !matrix[row + 10][col]
-      ) {
-        penalty += N3;
+    for (let row = 0; row <= size - 7; row++) {
+      if (matchPattern(matrix, row, col, pattern, false)) {
+        // Pattern found, check for 4 light modules before or after
+        
+        // 4 light modules before
+        let lightBefore = true;
+        if (row < 4) {
+          lightBefore = false;
+        } else {
+          for (let i = 1; i <= 4; i++) {
+            if (matrix[row - i][col]) {
+              lightBefore = false;
+              break;
+            }
+          }
+        }
+        
+        // 4 light modules after
+        let lightAfter = true;
+        if (row + 7 + 4 > size) {
+          lightAfter = false;
+        } else {
+          for (let i = 0; i < 4; i++) {
+            if (matrix[row + 7 + i][col]) {
+              lightAfter = false;
+              break;
+            }
+          }
+        }
+        
+        if (lightBefore || lightAfter) {
+          penalty += N3;
+        }
       }
     }
   }
@@ -288,35 +310,4 @@ export function selectBestMask(matrices: QRMatrix[]): number {
   return bestPattern;
 }
 
-/**
- * Create reservation map for masking
- * Marks function patterns that should not be masked
- */
-export function createReservationMap(size: number): boolean[][] {
-  const reservation = Array.from({ length: size }, () => Array(size).fill(false));
-  
-  // Reserve finder patterns and separators
-  for (let i = 0; i < 9; i++) {
-    for (let j = 0; j < 9; j++) {
-      reservation[i][j] = true; // Top-left
-      reservation[i][size - 1 - j] = true; // Top-right
-      reservation[size - 1 - i][j] = true; // Bottom-left
-    }
-  }
-  
-  // Reserve timing patterns
-  for (let i = 8; i < size - 8; i++) {
-    reservation[6][i] = true; // Horizontal
-    reservation[i][6] = true; // Vertical
-  }
-  
-  // Reserve format information areas
-  for (let i = 0; i < 9; i++) {
-    reservation[8][i] = true;
-    reservation[i][8] = true;
-    reservation[8][size - 1 - i] = true;
-    reservation[size - 1 - i][8] = true;
-  }
-  
-  return reservation;
-}
+export { createReservationMap } from './matrix.js';

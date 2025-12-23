@@ -240,20 +240,100 @@ export function getAlignmentPatternPositions(
   const positions: [number, number][] = [];
   const coords = versionInfo.alignmentPatterns;
 
+  const size = versionInfo.size;
+
   // Alignment patterns are placed at intersections of coordinates
-  // except where they would overlap with finder patterns
+  // except where they would overlap with finder patterns (8x8 area)
   for (const row of coords) {
     for (const col of coords) {
-      // Skip if overlaps with top-left finder pattern
-      if (row === coords[0] && col === coords[0]) continue;
-      // Skip if overlaps with top-right finder pattern
-      if (row === coords[0] && col === coords[coords.length - 1]) continue;
-      // Skip if overlaps with bottom-left finder pattern
-      if (row === coords[coords.length - 1] && col === coords[0]) continue;
+      // Check if the 5x5 alignment pattern (centered at row, col)
+      // overlaps with any of the three 8x8 finder pattern areas.
+      
+      // Top-left finder: (0,0) to (8,8)
+      if (row - 2 < 9 && col - 2 < 9) continue;
+      
+      // Top-right finder: (0, size - 9) to (8, size - 1)
+      if (row - 2 < 9 && col + 2 > size - 9) continue;
+      
+      // Bottom-left finder: (size - 9, 0) to (size - 1, 8)
+      if (row + 2 > size - 9 && col - 2 < 9) continue;
 
       positions.push([row, col]);
     }
   }
 
   return positions;
+}
+/**
+ * Calculate the number of available modules for data and ECC
+ * @param version QR version
+ * @returns Number of available modules
+ */
+export function getAvailableModules(version: number): number {
+  const size = 17 + version * 4;
+  const reservation = Array.from({ length: size }, () => Array(size).fill(false));
+  
+  // 1. Finder patterns + separators (8x8 areas)
+  for (let i = 0; i < 9; i++) {
+    for (let j = 0; j < 9; j++) {
+      if (i < 8 && j < 8) reservation[i][j] = true; // Top-left
+      if (i < 8 && size - 1 - j >= size - 8) reservation[i][size - 1 - j] = true; // Top-right
+      if (size - 1 - i >= size - 8 && j < 8) reservation[size - 1 - i][j] = true; // Bottom-left
+    }
+  }
+  
+  // 2. Timing patterns
+  for (let i = 8; i < size - 8; i++) {
+    reservation[6][i] = true;
+    reservation[i][6] = true;
+  }
+  
+  // 3. Alignment patterns
+  if (version >= 2) {
+    const positions = getAlignmentPatternPositions(version);
+    for (const [row, col] of positions) {
+      for (let r = -2; r <= 2; r++) {
+        for (let c = -2; c <= 2; c++) {
+          reservation[row + r][col + c] = true;
+        }
+      }
+    }
+  }
+  
+  // 4. Format info areas
+  for (let i = 0; i < 9; i++) {
+    reservation[8][i] = true; // Top-left horizontal
+    reservation[i][8] = true; // Top-left vertical
+  }
+  for (let i = 0; i < 8; i++) {
+    reservation[8][size - 1 - i] = true; // Top-right horizontal
+  }
+  for (let i = 0; i < 8; i++) {
+    reservation[size - 1 - i][8] = true; // Bottom-left vertical
+  }
+  
+  // 5. Version info areas (for version >= 7)
+  if (version >= 7) {
+    for (let i = 0; i < 6; i++) {
+      for (let j = 0; j < 3; j++) {
+        reservation[size - 11 + j][i] = true; // Bottom-left
+        reservation[i][size - 11 + j] = true; // Top-right
+      }
+    }
+  }
+  
+  // 6. Dark module
+  reservation[size - 8][8] = true;
+  
+  // Count unreserved modules
+  let count = 0;
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (!reservation[r][c]) {
+        count++;
+      }
+    }
+  }
+  
+  return count;
 }

@@ -1,5 +1,5 @@
 /**
- * QR Code Generator - Main Entry Point
+ * modqr - QR Code Generator
  * Zero-dependency QR code generation library
  */
 
@@ -7,7 +7,7 @@ import type { ErrorCorrectionLevel, VersionInfo } from './core/version.js';
 import { selectVersion } from './core/version.js';
 import { encodeData, splitIntoBlocks, interleaveBlocks } from './core/encoder.js';
 import { generateErrorCorrectionBlocks } from './core/ecc.js';
-import { buildMatrix, type QRMatrix } from './core/matrix.js';
+import { buildMatrix, placeFormatInfo, type QRMatrix } from './core/matrix.js';
 import { applyMask, selectBestMask, createReservationMap } from './core/mask.js';
 import { renderSVG } from './render/svg.js';
 import { renderCanvas } from './render/canvas.js';
@@ -87,16 +87,19 @@ export function generateQR(data: string, options: QRCodeOptions = {}): QRResult 
 
   // 6. Try all mask patterns and select best
   const reservation = createReservationMap(versionInfo.size);
+  const matrix = buildMatrix(versionInfo, finalData, reservation);
   const maskedMatrices: QRMatrix[] = [];
 
   for (let maskPattern = 0; maskPattern < 8; maskPattern++) {
-    const matrix = buildMatrix(versionInfo, finalData, errorCorrection, maskPattern);
     const masked = applyMask(matrix, maskPattern, reservation);
     maskedMatrices.push(masked);
   }
 
   const bestMaskPattern = selectBestMask(maskedMatrices);
   let finalMatrix = maskedMatrices[bestMaskPattern];
+
+  // 7. Place format information LAST
+  placeFormatInfo(finalMatrix, errorCorrection, bestMaskPattern);
 
   // 7. Apply logo if specified
   if (logo) {

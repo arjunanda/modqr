@@ -5,6 +5,7 @@
  */
 
 import type { ErrorCorrectionLevel, VersionInfo } from './version.js';
+import { getAvailableModules } from './version.js';
 
 /**
  * Galois Field GF(256) exponential table
@@ -155,26 +156,21 @@ export function getEccCountPerBlock(
 ): number {
   const eccBlocks = versionInfo.eccBlocks[ecLevel];
   
-  // Calculate total codewords and data codewords
-  const size = versionInfo.size;
-  const totalCodewords = Math.floor(((size * size) - 
-    (3 * 64) - // Finder patterns
-    (2 * (size - 16)) - // Timing patterns
-    36 - // Format info (2x)
-    (versionInfo.version >= 7 ? 67 : 0)) / 8); // Version info if applicable
+  // Calculate total codewords for this version
+  // Size = 17 + version * 4
+  
+  // Available modules for data + ECC
+  const availableModules = getAvailableModules(versionInfo.version);
+  const totalCodewords = Math.floor(availableModules / 8);
   
   let totalDataCodewords = 0;
+  let totalBlocks = 0;
   for (const [g1Blocks, g1Codewords, g2Blocks, g2Codewords] of eccBlocks) {
     totalDataCodewords += g1Blocks * g1Codewords + g2Blocks * g2Codewords;
+    totalBlocks += g1Blocks + g2Blocks;
   }
   
   const totalEccCodewords = totalCodewords - totalDataCodewords;
-  
-  // Calculate ECC per block
-  let totalBlocks = 0;
-  for (const [g1Blocks, , g2Blocks] of eccBlocks) {
-    totalBlocks += g1Blocks + g2Blocks;
-  }
   
   return Math.floor(totalEccCodewords / totalBlocks);
 }

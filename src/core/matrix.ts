@@ -28,13 +28,14 @@ export function createMatrix(size: number): QRMatrix {
 /**
  * Create reservation map
  */
-function createReservationMap(size: number): ReservationMap {
+export function createReservationMap(size: number): ReservationMap {
   return Array.from({ length: size }, () => Array(size).fill(false));
 }
 
 /**
  * Place finder pattern (7x7 pattern in corners)
  * Pattern: outer 7x7 black border, inner 5x5 white border, center 3x3 black square
+ * Also adds a mandatory 1-module white separator around the pattern.
  */
 function placeFinderPattern(
   matrix: QRMatrix,
@@ -42,22 +43,33 @@ function placeFinderPattern(
   row: number,
   col: number
 ): void {
+  const size = matrix.length;
+  
+  // Place 7x7 finder pattern + 1-module separator
   for (let r = -1; r <= 7; r++) {
     for (let c = -1; c <= 7; c++) {
       const y = row + r;
       const x = col + c;
       
-      if (y < 0 || y >= matrix.length || x < 0 || x >= matrix.length) {
+      // Skip if out of bounds
+      if (y < 0 || y >= size || x < 0 || x >= size) {
         continue;
       }
       
-      // Determine if this module should be dark
-      const isDark =
-        (r >= 0 && r <= 6 && (c === 0 || c === 6)) || // Vertical borders
-        (c >= 0 && c <= 6 && (r === 0 || r === 6)) || // Horizontal borders
-        (r >= 2 && r <= 4 && c >= 2 && c <= 4); // Center 3x3
+      // Determine if this module is part of the 7x7 finder pattern
+      if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
+        const isDark =
+          r === 0 || r === 6 || // Horizontal borders
+          c === 0 || c === 6 || // Vertical borders
+          (r >= 2 && r <= 4 && c >= 2 && c <= 4); // Center 3x3
+        
+        matrix[y][x] = isDark;
+      } else {
+        // This is the separator area - must be white
+        matrix[y][x] = false;
+      }
       
-      matrix[y][x] = isDark;
+      // Always reserve finder + separator
       reservation[y][x] = true;
     }
   }
@@ -72,13 +84,13 @@ function placeFinderPatterns(
 ): void {
   const size = matrix.length;
   
-  // Top-left
+  // Top-left (0,0)
   placeFinderPattern(matrix, reservation, 0, 0);
   
-  // Top-right
+  // Top-right (0, size-7)
   placeFinderPattern(matrix, reservation, 0, size - 7);
   
-  // Bottom-left
+  // Bottom-left (size-7, 0)
   placeFinderPattern(matrix, reservation, size - 7, 0);
 }
 
@@ -95,10 +107,6 @@ function placeAlignmentPattern(
     for (let c = -2; c <= 2; c++) {
       const y = row + r;
       const x = col + c;
-      
-      if (y < 0 || y >= matrix.length || x < 0 || x >= matrix.length) {
-        continue;
-      }
       
       // Outer 5x5 border and center dot
       const isDark =
@@ -118,9 +126,15 @@ function placeAlignmentPatterns(
   reservation: ReservationMap,
   version: number
 ): void {
+  // ISO: No alignment patterns for version 1
+  if (version < 2) return;
+
   const positions = getAlignmentPatternPositions(version);
   
   for (const [row, col] of positions) {
+    // Skip if already reserved (overlaps with finder patterns)
+    if (reservation[row][col]) continue;
+    
     placeAlignmentPattern(matrix, reservation, row, col);
   }
 }
@@ -134,31 +148,48 @@ function placeTimingPatterns(
 ): void {
   const size = matrix.length;
   
-  // Horizontal timing pattern (row 6)
-  for (let x = 8; x < size - 8; x++) {
-    matrix[6][x] = x % 2 === 0;
-    reservation[6][x] = true;
+  // Timing patterns start at row/col 6 and alternate
+  // They run between the finder pattern separators
+  for (let i = 8; i < size - 8; i++) {
+    // Horizontal timing pattern (row 6)
+    if (!reservation[6][i]) {
+      matrix[6][i] = i % 2 === 0;
+      reservation[6][i] = true;
+    }
+    
+    // Vertical timing pattern (column 6)
+    if (!reservation[i][6]) {
+      matrix[i][6] = i % 2 === 0;
+      reservation[i][6] = true;
+    }
   }
+}
+
+/**
+ * Place dark module (always dark)
+ */
+function placeDarkModule(
+  matrix: QRMatrix,
+  reservation: ReservationMap
+): void {
+  const size = matrix.length;
+  const row = size - 8;
+  const col = 8;
   
-  // Vertical timing pattern (column 6)
-  for (let y = 8; y < size - 8; y++) {
-    matrix[y][6] = y % 2 === 0;
-    reservation[y][6] = true;
-  }
+  matrix[row][col] = true;
+  reservation[row][col] = true;
 }
 
 /**
  * Reserve format information areas
  */
-function reserveFormatAreas(reservation: ReservationMap): void {
+export function reserveFormatAreas(reservation: ReservationMap): void {
   const size = reservation.length;
   
   // Top-left format info (around top-left finder)
   for (let i = 0; i < 9; i++) {
-    if (i !== 6) {
-      reservation[8][i] = true; // Horizontal
-      reservation[i][8] = true; // Vertical
-    }
+    reservation[8][i] = true; // Horizontal
+    reservation[i][8] = true; // Vertical
   }
   
   // Top-right format info
@@ -170,9 +201,6 @@ function reserveFormatAreas(reservation: ReservationMap): void {
   for (let i = 0; i < 7; i++) {
     reservation[size - 1 - i][8] = true;
   }
-  
-  // Dark module (always dark)
-  reservation[size - 8][8] = true;
 }
 
 /**
@@ -189,25 +217,35 @@ export function placeFormatInfo(
   const size = matrix.length;
   
   // Format info: 5 bits (2 for EC level, 3 for mask) + 10 bits BCH error correction
+  // formatBits[0] = MSB (bit 14), formatBits[14] = LSB (bit 0)
   const formatBits = generateFormatBits(ecLevel, maskPattern);
   
-  // Place format info around top-left finder
+  // === Top-Left Area ===
+  // Bits 14-9 -> (8,0) to (8,5)
   for (let i = 0; i < 6; i++) {
     matrix[8][i] = formatBits[i];
   }
+  // Bit 8 -> (8,7)
   matrix[8][7] = formatBits[6];
+  // Bit 7 -> (8,8)
   matrix[8][8] = formatBits[7];
+  // Bit 6 -> (7,8)
   matrix[7][8] = formatBits[8];
-  for (let i = 9; i < 15; i++) {
-    matrix[14 - i][8] = formatBits[i];
+  // Bits 5-0 -> (5,8) to (0,8)
+  for (let i = 0; i < 6; i++) {
+    matrix[5 - i][8] = formatBits[9 + i];
   }
   
-  // Place format info on top-right and bottom-left
+  // === Top-Right Area ===
+  // Bits 7-0 -> (8, size-8) to (8, size-1)
   for (let i = 0; i < 8; i++) {
-    matrix[8][size - 1 - i] = formatBits[i];
+    matrix[8][size - 8 + i] = formatBits[7 + i];
   }
-  for (let i = 8; i < 15; i++) {
-    matrix[size - 15 + i][8] = formatBits[i];
+  
+  // === Bottom-Left Area ===
+  // Bits 14-8 -> (size-1, 8) to (size-7, 8)
+  for (let i = 0; i < 7; i++) {
+    matrix[size - 1 - i][8] = formatBits[i];
   }
   
   // Dark module (always dark)
@@ -292,29 +330,29 @@ export function placeData(
 }
 
 /**
- * Build complete QR code matrix
+ * Build complete QR code matrix (excluding masking and format info)
  */
 export function buildMatrix(
   versionInfo: VersionInfo,
   data: number[],
-  ecLevel: ErrorCorrectionLevel,
-  maskPattern: number
+  reservation: ReservationMap
 ): QRMatrix {
   const size = versionInfo.size;
   const matrix = createMatrix(size);
-  const reservation = createReservationMap(size);
   
-  // Place function patterns
+  // 1. Place function patterns
   placeFinderPatterns(matrix, reservation);
   placeAlignmentPatterns(matrix, reservation, versionInfo.version);
   placeTimingPatterns(matrix, reservation);
+  
+  // 2. Place dark module
+  placeDarkModule(matrix, reservation);
+  
+  // 3. Reserve format areas
   reserveFormatAreas(reservation);
   
-  // Place data
+  // 4. Place data (will be masked later)
   placeData(matrix, reservation, data);
-  
-  // Place format information
-  placeFormatInfo(matrix, ecLevel, maskPattern);
   
   return matrix;
 }
