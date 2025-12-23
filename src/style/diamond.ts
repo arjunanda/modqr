@@ -32,17 +32,16 @@ export class DiamondStyle implements QRStyleRenderer {
     _matrix: QRMatrix,
     options: StyleOptions
   ): void {
-    const s = size * 0.8;
-    const offset = (size - s) / 2;
     const cx = x + size / 2;
     const cy = y + size / 2;
+    const r = size * 0.5;
 
     ctx.fillStyle = options.foreground;
     ctx.beginPath();
-    ctx.moveTo(cx, y + offset);
-    ctx.lineTo(x + size - offset, cy);
-    ctx.lineTo(cx, y + size - offset);
-    ctx.lineTo(x + offset, cy);
+    ctx.moveTo(cx, cy - r);
+    ctx.lineTo(cx + r, cy);
+    ctx.lineTo(cx, cy + r);
+    ctx.lineTo(cx - r, cy);
     ctx.closePath();
     ctx.fill();
   }

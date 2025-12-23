@@ -34,21 +34,20 @@ export class GlitchStyle implements QRStyleRenderer {
     _matrix: QRMatrix,
     options: StyleOptions
   ): void {
-    const shift = (Math.random() - 0.5) * (size * 0.4);
+    const offset = size * 0.1;
     
-    // Main color
-    ctx.fillStyle = options.foreground;
-    ctx.fillRect(x + shift, y, size, size);
-    
-    // Cyan glitch
-    ctx.fillStyle = '#00ffff';
+    // Red channel offset
+    ctx.fillStyle = '#ff0000';
     ctx.globalAlpha = 0.5;
-    ctx.fillRect(x - shift * 0.5, y, size, size);
+    ctx.fillRect(x - offset, y, size, size);
     
-    // Magenta glitch
-    ctx.fillStyle = '#ff00ff';
-    ctx.fillRect(x + shift * 0.5, y, size, size);
+    // Blue channel offset
+    ctx.fillStyle = '#0000ff';
+    ctx.fillRect(x + offset, y, size, size);
     
-    ctx.globalAlpha = 1.0; // Reset
+    // Main core
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = options.foreground;
+    ctx.fillRect(x, y, size, size);
   }
 }

@@ -2,8 +2,13 @@ export type QRStyle = 'square' | 'dots' | 'rounded' | 'liquid' | 'blob' | 'wave'
 
 export type FinderStyle = 'square' | 'rounded' | 'extra-rounded' | 'dots' | 'rounded-tl' | 'rounded-tr' | 'rounded-bl' | 'rounded-br' | 'leaf' | 'round-tr-cut' | 'round-br-cut' | 'round-tl-cut' | 'round-bl-cut';
 
+export interface FinderPatternStyle {
+  style: FinderStyle;
+  color?: string;
+}
+
 export interface CustomFinderStyles {
-  topLeft?: FinderStyle;
-  topRight?: FinderStyle;
-  bottomLeft?: FinderStyle;
+  topLeft?: FinderStyle | FinderPatternStyle;
+  topRight?: FinderStyle | FinderPatternStyle;
+  bottomLeft?: FinderStyle | FinderPatternStyle;
 }

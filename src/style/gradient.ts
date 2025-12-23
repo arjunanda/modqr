@@ -44,8 +44,16 @@ export class GradientStyle implements QRStyleRenderer {
     options: StyleOptions
   ): void {
     const gradient = ctx.createLinearGradient(x, y, x + size, y + size);
-    gradient.addColorStop(0, options.foreground);
-    gradient.addColorStop(1, options.background);
+    
+    // Match SVG default: foreground -> #1a73e8
+    if (options.gradientStops) {
+      for (const stop of options.gradientStops) {
+        gradient.addColorStop(parseFloat(stop.offset) / 100, stop.color);
+      }
+    } else {
+      gradient.addColorStop(0, options.foreground);
+      gradient.addColorStop(1, '#1a73e8');
+    }
     
     ctx.fillStyle = gradient;
     ctx.fillRect(x, y, size, size);

@@ -44,18 +44,19 @@ export class StarStyle implements QRStyleRenderer {
     const cx = x + size / 2;
     const cy = y + size / 2;
     const spikes = 4;
-    const outerRadius = size * 0.45;
-    const innerRadius = size * 0.15;
+    const outerRadius = size * 0.5;
+    const innerRadius = size * 0.2;
 
     ctx.fillStyle = options.foreground;
     ctx.beginPath();
     for (let i = 0; i < spikes * 2; i++) {
       const radius = i % 2 === 0 ? outerRadius : innerRadius;
-      const angle = (i * Math.PI) / spikes - Math.PI / 2;
-      const px = cx + Math.cos(angle) * radius;
-      const py = cy + Math.sin(angle) * radius;
-      if (i === 0) ctx.moveTo(px, py);
-      else ctx.lineTo(px, py);
+      const svgAngle = (i * Math.PI) / spikes;
+      const sx = cx + Math.sin(svgAngle) * radius;
+      const sy = cy - Math.cos(svgAngle) * radius;
+      
+      if (i === 0) ctx.moveTo(sx, sy);
+      else ctx.lineTo(sx, sy);
     }
     ctx.closePath();
     ctx.fill();

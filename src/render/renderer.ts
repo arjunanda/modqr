@@ -11,6 +11,7 @@ export interface StyleOptions {
   foreground: string;
   background: string;
   finderStyle?: FinderStyle;
+  finderColor?: string;
   customFinderStyles?: CustomFinderStyles;
   ctx?: CanvasRenderingContext2D;
   [key: string]: any; // For style-specific options
@@ -99,9 +100,27 @@ export class BaseRenderer {
             const fx = (finderCol + options.margin) * moduleSize;
             const fy = (finderRow + options.margin) * moduleSize;
             
-            const style = (finderPos && options.customFinderStyles?.[finderPos]) || options.finderStyle || 'square';
-            const finderRenderer = getFinderRenderer(style);
-            output += finderRenderer.render({ x: fx, y: fy, moduleSize, color: options.foreground, ctx: options.ctx });
+            // Resolve style and color for this finder
+            let styleName: FinderStyle = 'square';
+            let color = options.finderColor || options.foreground;
+
+            const customConfig = options.customFinderStyles?.[finderPos];
+            
+            if (customConfig) {
+              if (typeof customConfig === 'string') {
+                styleName = customConfig;
+              } else {
+                styleName = customConfig.style;
+                if (customConfig.color) {
+                  color = customConfig.color;
+                }
+              }
+            } else if (options.finderStyle) {
+              styleName = options.finderStyle;
+            }
+
+            const finderRenderer = getFinderRenderer(styleName);
+            output += finderRenderer.render({ x: fx, y: fy, moduleSize, color, ctx: options.ctx });
             renderedFinders.add(finderPos);
           }
           continue;

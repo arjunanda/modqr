@@ -35,6 +35,7 @@ export interface QRCodeOptions {
   errorCorrection?: ErrorCorrectionLevel;
   style?: QRStyle;
   finderStyle?: FinderStyle;
+  finderColor?: string;
   customFinderStyles?: CustomFinderStyles;
   logo?: LogoConfig;
   renderer?: 'svg' | 'canvas' | 'ascii';
@@ -123,6 +124,7 @@ export function generateQR(data: string, options: QRCodeOptions = {}): QRResult 
     background, 
     style, 
     finderStyle: options.finderStyle,
+    finderColor: options.finderColor,
     customFinderStyles: options.customFinderStyles,
     logo 
   };

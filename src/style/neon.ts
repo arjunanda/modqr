@@ -42,11 +42,21 @@ export class NeonStyle implements QRStyleRenderer {
     _matrix: QRMatrix,
     options: StyleOptions
   ): void {
+    // Inner solid core
+    ctx.fillStyle = options.foreground;
+    ctx.fillRect(x + size * 0.1, y + size * 0.1, size * 0.8, size * 0.8);
+
+    // Outer glow
     ctx.shadowBlur = 10;
     ctx.shadowColor = options.foreground;
-    ctx.strokeStyle = options.foreground;
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x + 1, y + 1, size - 2, size - 2);
-    ctx.shadowBlur = 0; // Reset
+    ctx.fillStyle = options.foreground; // Use same color for glow base
+    
+    // Draw a slightly transparent rect for the glow effect
+    ctx.globalAlpha = 0.3;
+    ctx.fillRect(x, y, size, size);
+    
+    // Reset
+    ctx.globalAlpha = 1.0;
+    ctx.shadowBlur = 0;
   }
 }

@@ -1,7 +1,8 @@
 {
   "name": "modqr",
-  "version": "1.0.0",
-  "description": "Zero-dependency QR Code generator with native ISO/IEC 18004 implementation",
+  "version": "1.0.1",
+  "description": "Lightweight and highly customizable QR Code generator for JavaScript and TypeScript. Zero-dependency, supports SVG/Canvas/ASCII, custom module styles, finder patterns, and logo integration.",
+  "homepage": "https://modqr.free.nf/",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -19,7 +20,7 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "prebuild": "npm run clean",
+    "prebuild": "npm run clean",  
     "prepublishOnly": "npm run build"
   },
   "keywords": [
@@ -27,18 +28,24 @@
     "qr",
     "qr-code",
     "generator",
+    "qr-code-generator",
+    "customizable",
+    "styling",
+    "logo",
     "zero-dependency",
     "typescript",
+    "javascript",
     "svg",
     "canvas",
-    "iso18004",
-    "reed-solomon"
+    "ascii",
+    "lightweight",
+    "high-performance"
   ],
   "author": "arjunanda",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/arjunanda/modqr-js.git"
+    "url": "git+https://github.com/arjunanda/modqr.git"
   },
   "engines": {
     "node": ">=16.0.0"

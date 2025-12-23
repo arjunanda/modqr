@@ -1,9 +1,11 @@
-# modqr
+# ModQR
 
 [![npm version](https://img.shields.io/npm/v/modqr.svg)](https://www.npmjs.com/package/modqr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The most aesthetic, customizable, and production-ready QR Code generator with **zero external dependencies**. Native implementation of ISO/IEC 18004 standard in TypeScript with advanced styling capabilities.
+A lightweight and highly customizable QR Code generator for JavaScript and TypeScript with **zero external dependencies**. Native implementation of ISO/IEC 18004 standard with advanced styling, custom finder patterns, and logo integration.
+
+[**📚 Full Documentation**](https://modqr.free.nf/)
 
 ## Features
 
@@ -82,6 +84,25 @@ const qr = generateQR("Data", {
 });
 ```
 
+### Finder Colors
+
+You can set a global color for all finders or customize each corner:
+
+```javascript
+const qr = generateQR("Data", {
+  foreground: "#000000",
+  // Global finder color
+  finderColor: "#ff0000",
+
+  // Or per-corner color
+  customFinderStyles: {
+    topLeft: { style: "rounded", color: "#ff0000" },
+    topRight: { style: "dots", color: "#00ff00" },
+    bottomLeft: "leaf", // Inherits finderColor or foreground
+  },
+});
+```
+
 ## API Reference
 
 ### `generateQR(data, options)`
@@ -99,6 +120,7 @@ Main function for QR code generation.
   - `errorCorrection` ('L' | 'M' | 'Q' | 'H'): Error correction level (default: 'M')
   - `style` (QRStyle): Module style (default: 'square')
   - `finderStyle` (FinderStyle): Global finder pattern style
+  - `finderColor` (string): Global finder pattern color (default: inherits foreground)
   - `customFinderStyles` (object): Individual finder styles
   - `renderer` ('svg' | 'canvas' | 'ascii'): Output renderer (default: 'svg')
   - `logo` (object, optional): Logo overlay configuration

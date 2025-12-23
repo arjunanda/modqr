@@ -39,20 +39,29 @@ export class WaveStyle implements QRStyleRenderer {
     ctx: CanvasRenderingContext2D,
     x: number,
     y: number,
-    _row: number,
+    row: number,
     _col: number,
     size: number,
     _matrix: QRMatrix,
     options: StyleOptions
   ): void {
-    const wave = Math.sin(x * 0.2) * (size * 0.2);
-    const r = size * 0.4;
-    const cx = x + size / 2;
-    const cy = y + size / 2 + wave;
+    const amplitude = size * 0.15;
+    const frequency = 0.5;
+    const phase = row * 0.5;
 
     ctx.fillStyle = options.foreground;
     ctx.beginPath();
-    ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.moveTo(x, y + size / 2);
+
+    for (let i = 0; i <= 10; i++) {
+      const px = x + (i / 10) * size;
+      const py = y + size / 2 + Math.sin((i / 10) * Math.PI * 2 * frequency + phase) * amplitude;
+      ctx.lineTo(px, py);
+    }
+
+    ctx.lineTo(x + size, y + size);
+    ctx.lineTo(x, y + size);
+    ctx.closePath();
     ctx.fill();
   }
 }
