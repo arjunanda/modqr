@@ -1,11 +1,12 @@
 # ModQR
 
 [![npm version](https://img.shields.io/npm/v/modqr.svg)](https://www.npmjs.com/package/modqr)
+[![npm downloads](https://img.shields.io/npm/dt/modqr.svg)](https://www.npmjs.com/package/modqr)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A lightweight and highly customizable QR Code generator for JavaScript and TypeScript with **zero external dependencies**. Native implementation of ISO/IEC 18004 standard with advanced styling, custom finder patterns, and logo integration.
 
-[**📚 Full Documentation**](https://modqr.free.nf/)
+[**📚 Full Documentation**](https://modqr.netlify.app/)
 
 ## Features
 
@@ -152,3 +153,10 @@ Contributions are welcome! Please ensure:
 ## Acknowledgments
 
 Implemented based on ISO/IEC 18004:2015 specification.
+
+## Support
+
+If you find ModQR useful, consider supporting its development:
+
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/G2G01QOQ38)
+[![Saweria](https://img.shields.io/badge/Support-Saweria-orange?style=for-the-badge&logo=ko-fi&logoColor=white)](https://saweria.co/arjunanda09)
